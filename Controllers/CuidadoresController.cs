@@ -15,11 +15,13 @@ public class CuidadoresController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var cuidadores = await _db.Cuidadores
-            .OrderBy(c => c.Nombre, StringComparer.CurrentCultureIgnoreCase)
-            .ToListAsync();
+        var cuidadores = await _db.Cuidadores.ToListAsync();
 
-        return Ok(cuidadores);
+        var catalogo = cuidadores
+            .OrderBy(c => c.Nombre, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+
+        return Ok(catalogo);
     }
 
     // TODO (Ticket 1): GetById(int id) -> 400 si id <= 0, 404 si no existe
