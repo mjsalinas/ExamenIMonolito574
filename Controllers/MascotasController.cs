@@ -25,15 +25,14 @@ public class MascotasController : ControllerBase
 
     // TODO (Ticket 1): GetById(int id) -> 400 si id <= 0, 404 si no existe
 [HttpGet("{id}")]
-public async Task<IActionResult> GetById(int id)
+public IActionResult GetById(int id)
 {
     if (id <= 0)
-        return BadRequest("El id debe ser mayor que 0.");
+        return BadRequest();
 
-    var mascota = await _context.Mascotas
-        .FirstOrDefaultAsync(m => m.Id == id);
+    var mascota = _context.Mascotas.Find(id);
 
-    if (mascota is null)
+    if (mascota == null)
         return NotFound();
 
     return Ok(mascota);
