@@ -41,9 +41,10 @@ public class CuidadoresController : ControllerBase
     {
         // TODO (Ticket 2): normalizar texto (espacios, capitalización) y validar
         // formato de Nombre y que Turno sea exactamente "Mañana", "Tarde" o "Noche"
+        _db.Cuidadores.Add(cuidador);
+        await _db.SaveChangesAsync();   
 
         // TODO (Ticket 3): validar duplicado (Nombre + Turno) -> 409 Conflict
-
         if (string.IsNullOrWhiteSpace(cuidador.Nombre))
             return BadRequest("El nombre del cuidador es obligatorio.");
 
@@ -53,9 +54,10 @@ public class CuidadoresController : ControllerBase
     }
 
     // TODO (Ticket 4): Update(int id, Cuidador cuidadorActualizado)
-
+}
     // TODO (Ticket 5): Delete(int id) -> 409 si el cuidador tiene mascotas asignadas
-
+ 
+    
     // TODO (Ticket 6): GetMascotasPorCuidador(int id)
     // Ruta esperada: GET api/cuidadores/{id}/mascotas -> 404 si el cuidador no existe
-}
+
