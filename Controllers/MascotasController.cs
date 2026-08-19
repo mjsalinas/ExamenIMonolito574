@@ -26,6 +26,15 @@ public class MascotasController : ControllerBase
 
     // TODO (Ticket 1): GetById(int id) -> 400 si id <= 0, 404 si no existe
 
+[HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var mascota = await _db.Mascotas.Include(m => m.Cuidador)
+            .FirstOrDefaultAsync(m => m.Id == id);
+        if (mascota is null) return NotFound();
+        return Ok(mascota);
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create(Mascota mascota)
     {
@@ -36,7 +45,7 @@ public class MascotasController : ControllerBase
             return BadRequest("La especie es obligatoria.");
 
         // Un voluntario reportó que esta validación de edad se comporta raro (Ticket 0)
-        if (mascota.Edad > 0 || mascota.Edad > 30)
+        if (mascota.Edad  >= 0 && mascota.Edad <= 30)
             return BadRequest("La edad debe estar entre 0 y 30 años.");
 
         var cuidadorExiste = await _db.Cuidadores.AnyAsync(c => c.Id == mascota.CuidadorId);
