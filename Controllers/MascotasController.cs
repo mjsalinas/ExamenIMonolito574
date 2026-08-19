@@ -85,7 +85,54 @@ public class MascotasController : ControllerBase
         return CreatedAtAction(nameof(GetAll), new { id = mascota.Id }, mascota);
     }
 
-    // TODO (Ticket 4): Update(int id, Mascota mascotaActualizada)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, Mascota mascotaActualizada)
+    {
+        if (id <= 0)
+            return BadRequest("El id debe ser mayor que cero.");
 
-    // TODO (Ticket 5): Delete(int id) -> 409 si EnTratamiento es true
+        var mascota = await _db.Mascotas.FindAsync(id);
+        if (mascota is null)
+            return NotFound();
+
+        mascotaActualizada.Nombre = Normalize(mascotaActualizada.Nombre);
+        mascotaActualizada.Especie = Normalize(mascotaActualizada.Especie);
+
+        if (string.IsNullOrWhiteSpace(mascotaActualizada.Nombre))
+            return BadRequest("El nombre de la mascota es obligatorio.");
+
+        if (mascotaActualizada.Nombre.Length > 100)
+            return BadRequest("El nombre no puede exceder 100 caracteres.");
+
+        if (string.IsNullOrWhiteSpace(mascotaActualizada.Especie))
+            return BadRequest("La especie es obligatoria.");
+
+        if (mascotaActualizada.Especie.Length > 50)
+            return BadRequest("La especie no puede exceder 50 caracteres.");
+
+        if (mascotaActualizada.Edad < 0 || mascotaActualizada.Edad > 30)
+            return BadRequest("La edad debe estar entre 0 y 30 años.");
+
+        var cuidadorExiste = await _db.Cuidadores.AnyAsync(c => c.Id == mascotaActualizada.CuidadorId);
+        if (!cuidadorExiste)
+            return BadRequest("El cuidador especificado no existe.");
+
+        var duplicada = await _db.Mascotas.AnyAsync(m =>
+            m.Nombre == mascotaActualizada.Nombre &&
+            m.CuidadorId == mascotaActualizada.CuidadorId &&
+            m.Id != id);
+        if (duplicada)
+            return Conflict("Ya existe una mascota con ese nombre asignada a ese cuidador.");
+
+        mascota.Nombre = mascotaActualizada.Nombre;
+        mascota.Especie = mascotaActualizada.Especie;
+        mascota.Edad = mascotaActualizada.Edad;
+        mascota.EnTratamiento = mascotaActualizada.EnTratamiento;
+        mascota.CuidadorId = mascotaActualizada.CuidadorId;
+
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+
+    // TODO (Ticket 5): Delete(int id) -> 409 si EnTratamiento is true
 }

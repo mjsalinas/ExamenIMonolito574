@@ -71,7 +71,41 @@ public class CuidadoresController : ControllerBase
         return CreatedAtAction(nameof(GetAll), new { id = cuidador.Id }, cuidador);
     }
 
-    // TODO (Ticket 4): Update(int id, Cuidador cuidadorActualizado)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, Cuidador cuidadorActualizado)
+    {
+        if (id <= 0)
+            return BadRequest("El id debe ser mayor que cero.");
+
+        var cuidador = await _db.Cuidadores.FindAsync(id);
+        if (cuidador is null)
+            return NotFound();
+
+        cuidadorActualizado.Nombre = Normalize(cuidadorActualizado.Nombre);
+
+        if (string.IsNullOrWhiteSpace(cuidadorActualizado.Nombre))
+            return BadRequest("El nombre del cuidador es obligatorio.");
+
+        if (cuidadorActualizado.Nombre.Length > 100)
+            return BadRequest("El nombre no puede exceder 100 caracteres.");
+
+        var turnosValidos = new[] { "Mañana", "Tarde", "Noche" };
+        if (!turnosValidos.Contains(cuidadorActualizado.Turno))
+            return BadRequest("El turno debe ser 'Mañana', 'Tarde' o 'Noche'.");
+
+        var duplicado = await _db.Cuidadores.AnyAsync(c =>
+            c.Nombre == cuidadorActualizado.Nombre &&
+            c.Turno == cuidadorActualizado.Turno &&
+            c.Id != id);
+        if (duplicado)
+            return Conflict("Ya existe un cuidador con ese nombre en ese turno.");
+
+        cuidador.Nombre = cuidadorActualizado.Nombre;
+        cuidador.Turno = cuidadorActualizado.Turno;
+
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
 
     // TODO (Ticket 5): Delete(int id) -> 409 si el cuidador tiene mascotas asignadas
 
