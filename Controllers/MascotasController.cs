@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RefugioMascotas.Models;
@@ -12,6 +14,14 @@ public class MascotasController : ControllerBase
 
     public MascotasController(RefugioDbContext db) => _db = db;
 
+    private static string Normalize(string texto)
+    {
+        texto = texto.Trim();
+        texto = Regex.Replace(texto, @"\s+", " ");
+        texto = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(texto.ToLower());
+        return texto;
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -24,30 +34,46 @@ public class MascotasController : ControllerBase
         return Ok(catalogo);
     }
 
-    // TODO (Ticket 1): GetById(int id) -> 400 si id <= 0, 404 si no existe
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        if (id <= 0)
+            return BadRequest("El id debe ser mayor que cero.");
+
+        var mascota = await _db.Mascotas
+            .Include(m => m.Cuidador)
+            .FirstOrDefaultAsync(m => m.Id == id);
+
+        if (mascota is null)
+            return NotFound();
+
+        return Ok(mascota);
+    }
 
     [HttpPost]
     public async Task<IActionResult> Create(Mascota mascota)
     {
+        mascota.Nombre = Normalize(mascota.Nombre);
+        mascota.Especie = Normalize(mascota.Especie);
+
         if (string.IsNullOrWhiteSpace(mascota.Nombre))
             return BadRequest("El nombre de la mascota es obligatorio.");
+
+        if (mascota.Nombre.Length > 100)
+            return BadRequest("El nombre no puede exceder 100 caracteres.");
 
         if (string.IsNullOrWhiteSpace(mascota.Especie))
             return BadRequest("La especie es obligatoria.");
 
-        // Ticket 0: Error lógico corregido — la condición original usaba `> 0 || > 30`,
-/*diagnostica por qué la condición deja pasar valores inválidos y bloquea valores válidos, corrígela,
-y con al menos un caso límite (0, 30, -1, 31). */
+        if (mascota.Especie.Length > 50)
+            return BadRequest("La especie no puede exceder 50 caracteres.");
+
         if (mascota.Edad < 0 || mascota.Edad > 30)
             return BadRequest("La edad debe estar entre 0 y 30 años.");
 
         var cuidadorExiste = await _db.Cuidadores.AnyAsync(c => c.Id == mascota.CuidadorId);
         if (!cuidadorExiste)
             return BadRequest("El cuidador especificado no existe.");
-
-        // TODO (Ticket 2): normalizar texto y validar formato de Nombre/Especie
-
-        // TODO (Ticket 3): validar duplicado (Nombre + CuidadorId) -> 409 Conflict
 
         _db.Mascotas.Add(mascota);
         await _db.SaveChangesAsync();
