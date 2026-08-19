@@ -9,4 +9,5 @@ public class Cuidador
     public string Turno { get; set; } = string.Empty;
 
     public List<Mascota> Mascotas { get; set; } = new();
+    
 }
