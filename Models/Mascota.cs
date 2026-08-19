@@ -7,6 +7,10 @@ public class Mascota
     public string Especie { get; set; } = string.Empty;
 
     // Rango esperado: 0-30 (la validación actual tiene un error a propósito, ver Ticket 0)
+    // Ticket 0
+    
+
+
     public int Edad { get; set; }
 
     public bool EnTratamiento { get; set; }
