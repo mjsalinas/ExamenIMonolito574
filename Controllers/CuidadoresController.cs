@@ -54,10 +54,24 @@ public class CuidadoresController : ControllerBase
     }
 
     // TODO (Ticket 4): Update(int id, Cuidador cuidadorActualizado)
+      public async Task<IActionResult> Update(int id, Cuidador cuidador)
+    {
+        if (id != cuidador.Id)
+            return BadRequest("El id del cuidador no coincide con el id del cuerpo.");
+
+        var existente = await _db.Cuidadores.FindAsync(id);
+        if (existente == null)
+            return NotFound();
+
+        existente.Nombre = cuidador.Nombre;
+
+        await _db.SaveChangesAsync();
+
+        return NoContent();
+    }
 }
     // TODO (Ticket 5): Delete(int id) -> 409 si el cuidador tiene mascotas asignadas
- 
-    
+
     // TODO (Ticket 6): GetMascotasPorCuidador(int id)
     // Ruta esperada: GET api/cuidadores/{id}/mascotas -> 404 si el cuidador no existe
 
