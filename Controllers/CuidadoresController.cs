@@ -74,6 +74,35 @@ public class CuidadoresController : ControllerBase
     }
 
     // TODO (Ticket 4): Update(int id, Cuidador cuidadorActualizado)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, Cuidador cuidadorActualizado)
+    {
+        var cuidador = await _db.Cuidadores.FindAsync(id);
+        if (cuidador == null)
+            return NotFound($"No existe un cuidador con id {id}.");
+
+        if (string.IsNullOrWhiteSpace(cuidadorActualizado.Nombre) || string.IsNullOrWhiteSpace(cuidadorActualizado.Turno))
+            return BadRequest("Nombre y turno son obligatorios.");
+
+        cuidadorActualizado.Nombre = NormalizarTexto(cuidadorActualizado.Nombre);
+        cuidadorActualizado.Turno = NormalizarTexto(cuidadorActualizado.Turno);
+
+        var turnosValidos = new[] { "Mañana", "Tarde", "Noche" };
+        if (!turnosValidos.Contains(cuidadorActualizado.Turno))
+            return BadRequest("Turno inválido. Debe ser 'Mañana', 'Tarde' o 'Noche'.");
+
+        bool duplicado = await _db.Cuidadores.AnyAsync(c =>
+            c.Nombre == cuidadorActualizado.Nombre && c.Turno == cuidadorActualizado.Turno && c.Id != id);
+
+        if (duplicado)
+            return Conflict("Ya existe otro cuidador con ese nombre y turno.");
+
+        cuidador.Nombre = cuidadorActualizado.Nombre;
+        cuidador.Turno = cuidadorActualizado.Turno;
+
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
 
     // TODO (Ticket 5): Delete(int id) -> 409 si el cuidador tiene mascotas asignadas
 

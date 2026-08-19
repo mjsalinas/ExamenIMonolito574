@@ -84,6 +84,37 @@ public class MascotasController : ControllerBase
     }
 
     // TODO (Ticket 4): Update(int id, Mascota mascotaActualizada)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, Mascota mascotaActualizada)
+    {
+        var mascota = await _db.Mascotas.FindAsync(id);
+        if (mascota == null)
+            return NotFound($"No existe una mascota con id {id}.");
+
+        if (string.IsNullOrWhiteSpace(mascotaActualizada.Nombre) || string.IsNullOrWhiteSpace(mascotaActualizada.Especie))
+            return BadRequest("Nombre y especie son obligatorios.");
+
+        if (mascotaActualizada.Edad < 0 || mascotaActualizada.Edad > 30)
+            return BadRequest("La edad debe estar entre 0 y 30 años.");
+
+        mascotaActualizada.Nombre = NormalizarTexto(mascotaActualizada.Nombre);
+        mascotaActualizada.Especie = NormalizarTexto(mascotaActualizada.Especie);
+
+        bool duplicado = await _db.Mascotas.AnyAsync(m =>
+            m.Nombre == mascotaActualizada.Nombre && m.CuidadorId == mascotaActualizada.CuidadorId && m.Id != id);
+
+        if (duplicado)
+            return Conflict("Ya existe otra mascota con ese nombre bajo ese cuidador.");
+
+        mascota.Nombre = mascotaActualizada.Nombre;
+        mascota.Especie = mascotaActualizada.Especie;
+        mascota.Edad = mascotaActualizada.Edad;
+        mascota.EnTratamiento = mascotaActualizada.EnTratamiento;
+        mascota.CuidadorId = mascotaActualizada.CuidadorId;
+
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
 
     // TODO (Ticket 5): Delete(int id) -> 409 si EnTratamiento es true
     private string NormalizarTexto(string texto)
