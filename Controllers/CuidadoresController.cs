@@ -27,7 +27,43 @@ public class CuidadoresController : ControllerBase
         var cuidador = await _db.Cuidadores.FindAsync(id);
         return cuidador == null ? NotFound("Cuidador no encontrado.") : Ok(cuidador);
     }
-    // TODO (Ticket 1): GetById(int id) -> 400 si id <= 0, 404 si no existe
+
+    [HttpPost]
+    public async Task<IActionResult> Create(Cuidador c)
+    {
+
+        c.Nombre = NormalizarTexto(c.Nombre);
+        c.Turno = NormalizarTexto(c.Turno);
+
+
+        var turnosValidos = new[] { "Mañana", "Tarde", "Noche" };
+        var turnoEncontrado = turnosValidos.FirstOrDefault(t => t.Equals(c.Turno, StringComparison.OrdinalIgnoreCase));
+
+        if (turnoEncontrado == null)
+            return BadRequest("El turno debe ser exactamente 'Mañana', 'Tarde' o 'Noche'.");
+
+        c.Turno = turnoEncontrado;
+
+
+        if (string.IsNullOrWhiteSpace(c.Nombre) || c.Nombre.Length < 2 || c.Nombre.Length > 100)
+            return BadRequest("El nombre debe tener entre 2 y 100 caracteres.");
+
+        if (!Regex.IsMatch(c.Nombre, @"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s-]+$"))
+            return BadRequest("El nombre solo debe contener letras, espacios o guiones.");
+
+
+        bool existe = await _db.Cuidadores.AnyAsync(x =>
+            x.Nombre.ToLower() == c.Nombre.ToLower() &&
+            x.Turno == c.Turno);
+
+        if (existe)
+            return Conflict("Ya existe un cuidador registrado con el mismo nombre y turno.");
+
+        _db.Cuidadores.Add(c);
+        await _db.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetById), new { id = c.Id }, c);
+    }
 
 
     // TODO (Ticket 4): Update(int id, Cuidador cuidadorActualizado)
