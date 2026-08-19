@@ -47,5 +47,19 @@ public class CuidadoresController : ControllerBase
 
     // TODO (Ticket 6): GetMascotasPorCuidador(int id)
     // Ruta esperada: GET api/cuidadores/{id}/mascotas -> 404 si el cuidador no existe
-    
+    [HttpGet("{id}")]
+public async Task<IActionResult> GetById(int id)
+{
+    if (id <= 0)
+        return BadRequest("El id debe ser mayor que 0.");
+
+    var cuidador = await _db.Cuidadores
+        .Include(c => c.Mascotas)
+        .FirstOrDefaultAsync(c => c.Id == id);
+
+    if (cuidador is null)
+        return NotFound();
+
+    return Ok(cuidador);
+}
 }
