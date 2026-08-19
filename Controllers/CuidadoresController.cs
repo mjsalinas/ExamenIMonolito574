@@ -166,4 +166,21 @@ public async Task<IActionResult> Update(int id, Cuidador cuidadorActualizado)
 
     // TODO (Ticket 6): GetMascotasPorCuidador(int id)
     // Ruta esperada: GET api/cuidadores/{id}/mascotas -> 404 si el cuidador no existe
+    [HttpGet("{id}/mascotas")]
+    public async Task<IActionResult> GetMascotasPorCuidador(int id)
+    {
+    if (id <= 0)
+        return BadRequest("El ID debe ser mayor que cero.");
+
+    var cuidadorExiste = await _db.Cuidadores.AnyAsync(c => c.Id == id);
+    if (!cuidadorExiste)
+        return NotFound($"No se encontró un cuidador con ID {id}.");
+
+    var mascotas = await _db.Mascotas
+        .Where(m => m.CuidadorId == id)
+        .OrderBy(m => m.Nombre)
+        .ToListAsync();
+
+    return Ok(mascotas);
+    }
 }
