@@ -34,8 +34,10 @@ public class MascotasController : ControllerBase
         if (string.IsNullOrWhiteSpace(mascota.Especie))
             return BadRequest("La especie es obligatoria.");
 
-        // Un voluntario reportó que esta validación de edad se comporta raro (Ticket 0)
-        if (mascota.Edad > 0 || mascota.Edad > 30)
+        // Ticket 0: Error lógico corregido — la condición original usaba `> 0 || > 30`,
+/*diagnostica por qué la condición deja pasar valores inválidos y bloquea valores válidos, corrígela,
+y con al menos un caso límite (0, 30, -1, 31). */
+        if (mascota.Edad < 0 || mascota.Edad > 30)
             return BadRequest("La edad debe estar entre 0 y 30 años.");
 
         var cuidadorExiste = await _db.Cuidadores.AnyAsync(c => c.Id == mascota.CuidadorId);

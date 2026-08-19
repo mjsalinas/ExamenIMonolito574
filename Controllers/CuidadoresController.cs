@@ -21,9 +21,23 @@ public class CuidadoresController : ControllerBase
 
         return Ok(cuidadores);
     }
+/*
+ // TODO (Ticket 1): GetById(int id) -> 400 si id <= 0, 404 si no existe
+ 
+Tarea: implementa GetById (HttpGet("{id}")) en MascotasController y en CuidadoresController. En
+ambos: valida que el id sea mayor que cero (400 si no), y responde 404 si no existe el registro.*/
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        if (id <= 0)
+            return BadRequest("El id debe ser mayor que cero.");
 
-    // TODO (Ticket 1): GetById(int id) -> 400 si id <= 0, 404 si no existe
+        var cuidador = await _db.Cuidadores.FindAsync(id);
 
+        if (cuidador is null)
+            return NotFound();
+        return Ok(cuidador);
+    }
     [HttpPost]
     public async Task<IActionResult> Create(Cuidador cuidador)
     {
