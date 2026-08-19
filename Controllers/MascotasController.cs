@@ -58,9 +58,25 @@ public class MascotasController : ControllerBase
         if (!cuidadorExiste)
             return BadRequest("El cuidador especificado no existe.");
 
-        // TODO (Ticket 2): normalizar texto y validar formato de Nombre/Especie
+        // TODO (Ticket 2): normalizar texto y validar formato de Nombre/Especiemascota.Nombre = NormalizarTexto(mascota.Nombre);
+        mascota.Especie = NormalizarTexto(mascota.Especie);
+
+        if (mascota.Nombre.Length < 2 || mascota.Nombre.Length > 60)
+            return BadRequest("El nombre debe tener entre 2 y 60 caracteres.");
+
+        if (!System.Text.RegularExpressions.Regex.IsMatch(mascota.Nombre, @"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s-]+$"))
+            return BadRequest("El nombre solo puede contener letras, espacios y guiones.");
+
+        if (mascota.Especie.Length < 2 || mascota.Especie.Length > 40)
+            return BadRequest("La especie debe tener entre 2 y 40 caracteres.");
+
 
         // TODO (Ticket 3): validar duplicado (Nombre + CuidadorId) -> 409 Conflict
+        bool existeDuplicado = await _db.Mascotas.AnyAsync(m =>
+    m.Nombre == mascota.Nombre && m.CuidadorId == mascota.CuidadorId);
+
+        if (existeDuplicado)
+            return Conflict("Ya existe una mascota con ese nombre bajo ese cuidador.");
 
         _db.Mascotas.Add(mascota);
         await _db.SaveChangesAsync();
@@ -70,4 +86,10 @@ public class MascotasController : ControllerBase
     // TODO (Ticket 4): Update(int id, Mascota mascotaActualizada)
 
     // TODO (Ticket 5): Delete(int id) -> 409 si EnTratamiento es true
+    private string NormalizarTexto(string texto)
+    {
+        if (string.IsNullOrWhiteSpace(texto)) return texto;
+        texto = System.Text.RegularExpressions.Regex.Replace(texto.Trim(), @"\s+", " ");
+        return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(texto.ToLower());
+    }
 }

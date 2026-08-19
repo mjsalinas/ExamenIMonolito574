@@ -45,8 +45,25 @@ public class CuidadoresController : ControllerBase
     {
         // TODO (Ticket 2): normalizar texto (espacios, capitalización) y validar
         // formato de Nombre y que Turno sea exactamente "Mañana", "Tarde" o "Noche"
+        cuidador.Nombre = NormalizarTexto(cuidador.Nombre);
+        cuidador.Turno = NormalizarTexto(cuidador.Turno);
+
+        if (cuidador.Nombre.Length < 2 || cuidador.Nombre.Length > 100)
+            return BadRequest("El nombre debe tener entre 2 y 100 caracteres.");
+
+        if (!System.Text.RegularExpressions.Regex.IsMatch(cuidador.Nombre, @"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s-]+$"))
+            return BadRequest("El nombre solo puede contener letras, espacios y guiones.");
+
+        var turnosValidos = new[] { "Mañana", "Tarde", "Noche" };
+        if (!turnosValidos.Contains(cuidador.Turno))
+            return BadRequest("Turno inválido. Debe ser 'Mañana', 'Tarde' o 'Noche'.");
 
         // TODO (Ticket 3): validar duplicado (Nombre + Turno) -> 409 Conflict
+        bool existeDuplicado = await _db.Cuidadores.AnyAsync(c =>
+    c.Nombre == cuidador.Nombre && c.Turno == cuidador.Turno);
+
+        if (existeDuplicado)
+            return Conflict("Ya existe un cuidador con ese nombre y turno.");
 
         if (string.IsNullOrWhiteSpace(cuidador.Nombre))
             return BadRequest("El nombre del cuidador es obligatorio.");
@@ -62,4 +79,10 @@ public class CuidadoresController : ControllerBase
 
     // TODO (Ticket 6): GetMascotasPorCuidador(int id)
     // Ruta esperada: GET api/cuidadores/{id}/mascotas -> 404 si el cuidador no existe
+    private string NormalizarTexto(string texto)
+    {
+        if (string.IsNullOrWhiteSpace(texto)) return texto;
+        texto = System.Text.RegularExpressions.Regex.Replace(texto.Trim(), @"\s+", " ");
+        return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(texto.ToLower());
+    }
 }
