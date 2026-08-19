@@ -51,6 +51,12 @@ public class CuidadoresController : ControllerBase
         // TODO (Ticket 2): normalizar texto (espacios, capitalización) y validar
         // formato de Nombre y que Turno sea exactamente "Mañana", "Tarde" o "Noche"
 
+    
+
+        // Ticket 2 finalizado
+
+
+        
         // TODO (Ticket 3): validar duplicado (Nombre + Turno) -> 409 Conflict
 
         if (string.IsNullOrWhiteSpace(cuidador.Nombre))
