@@ -9,6 +9,39 @@ namespace RefugioMascotas.Controllers;
 public class CuidadoresController : ControllerBase
 {
     private readonly RefugioDbContext _db;
+    private string NormalizarTexto(string texto)
+{
+    if (string.IsNullOrWhiteSpace(texto))
+        return string.Empty;
+
+    // Recortar espacios
+    texto = texto.Trim();
+    
+    // Colapsar espacios múltiples a uno solo
+    texto = System.Text.RegularExpressions.Regex.Replace(texto, @"\s+", " ");
+    
+    // Capitalizar (primera letra mayúscula, resto minúscula)
+    var palabras = texto.Split(' ');
+    for (int i = 0; i < palabras.Length; i++)
+    {
+        if (palabras[i].Length > 0)
+        {
+            palabras[i] = char.ToUpper(palabras[i][0]) + palabras[i].Substring(1).ToLower();
+        }
+    }
+    
+    return string.Join(" ", palabras);
+}
+
+private bool EsNombreValido(string nombre)
+{
+    // 2-100 caracteres, solo letras, espacios y guiones
+    return !string.IsNullOrWhiteSpace(nombre) &&
+           nombre.Length >= 2 &&
+           nombre.Length <= 100 &&
+           System.Text.RegularExpressions.Regex.IsMatch(nombre, @"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\-]+$");
+}
+    
 
     public CuidadoresController(RefugioDbContext db) => _db = db;
 
@@ -40,21 +73,29 @@ public class CuidadoresController : ControllerBase
 
     [HttpPost]
     public async Task<IActionResult> Create(Cuidador cuidador)
-    {
-        // TODO (Ticket 2): normalizar texto (espacios, capitalización) y validar
-        // formato de Nombre y que Turno sea exactamente "Mañana", "Tarde" o "Noche"
+{
+    // Normalizar texto
+    cuidador.Nombre = NormalizarTexto(cuidador.Nombre);
+    cuidador.Turno = cuidador.Turno?.Trim();
 
-        // TODO (Ticket 3): validar duplicado (Nombre + Turno) -> 409 Conflict
+    // Validar formato de Nombre
+    if (!EsNombreValido(cuidador.Nombre))
+        return BadRequest("El nombre debe tener entre 2 y 100 caracteres y solo contener letras, espacios o guiones.");
 
-        if (string.IsNullOrWhiteSpace(cuidador.Nombre))
-            return BadRequest("El nombre del cuidador es obligatorio.");
+    // Validar Turno (lista cerrada)
+    var turnosPermitidos = new[] { "Mañana", "Tarde", "Noche" };
+    if (string.IsNullOrWhiteSpace(cuidador.Turno) || !turnosPermitidos.Contains(cuidador.Turno))
+        return BadRequest("El turno debe ser exactamente: 'Mañana', 'Tarde' o 'Noche'.");
 
-        _db.Cuidadores.Add(cuidador);
-        await _db.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetAll), new { id = cuidador.Id }, cuidador);
-    }
+    // Validar duplicado (Ticket 3)
+
+    _db.Cuidadores.Add(cuidador);
+    await _db.SaveChangesAsync();
+    return CreatedAtAction(nameof(GetAll), new { id = cuidador.Id }, cuidador);
+}
 
     // TODO (Ticket 4): Update(int id, Cuidador cuidadorActualizado)
+    
 
     // TODO (Ticket 5): Delete(int id) -> 409 si el cuidador tiene mascotas asignadas
 

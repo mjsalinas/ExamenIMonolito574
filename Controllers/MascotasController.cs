@@ -9,6 +9,38 @@ namespace RefugioMascotas.Controllers;
 public class MascotasController : ControllerBase
 {
     private readonly RefugioDbContext _db;
+    private string NormalizarTexto(string texto)
+{
+    if (string.IsNullOrWhiteSpace(texto))
+        return string.Empty;
+
+    // Recortar espacios
+    texto = texto.Trim();
+    
+    // Colapsar espacios múltiples a uno solo
+    texto = System.Text.RegularExpressions.Regex.Replace(texto, @"\s+", " ");
+    
+    // Capitalizar (primera letra mayúscula, resto minúscula)
+    var palabras = texto.Split(' ');
+    for (int i = 0; i < palabras.Length; i++)
+    {
+        if (palabras[i].Length > 0)
+        {
+            palabras[i] = char.ToUpper(palabras[i][0]) + palabras[i].Substring(1).ToLower();
+        }
+    }
+    
+    return string.Join(" ", palabras);
+}
+
+private bool EsNombreValido(string nombre)
+{
+    // 2-100 caracteres, solo letras, espacios y guiones
+    return !string.IsNullOrWhiteSpace(nombre) &&
+           nombre.Length >= 2 &&
+           nombre.Length <= 100 &&
+           System.Text.RegularExpressions.Regex.IsMatch(nombre, @"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\-]+$");
+}
 
     public MascotasController(RefugioDbContext db) => _db = db;
 
@@ -41,32 +73,41 @@ public class MascotasController : ControllerBase
     return Ok(mascota);
 }
     [HttpPost]
-    public async Task<IActionResult> Create(Mascota mascota)
-    {
-        if (string.IsNullOrWhiteSpace(mascota.Nombre))
-            return BadRequest("El nombre de la mascota es obligatorio.");
+    [HttpPost]
+public async Task<IActionResult> Create(Mascota mascota)
+{
+    // Normalizar texto
+    mascota.Nombre = NormalizarTexto(mascota.Nombre);
+    mascota.Especie = NormalizarTexto(mascota.Especie);
 
-        if (string.IsNullOrWhiteSpace(mascota.Especie))
-            return BadRequest("La especie es obligatoria.");
+    // Validar formato de Nombre
+    if (string.IsNullOrWhiteSpace(mascota.Nombre) || 
+        mascota.Nombre.Length < 2 || 
+        mascota.Nombre.Length > 60 ||
+        !System.Text.RegularExpressions.Regex.IsMatch(mascota.Nombre, @"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\-]+$"))
+        return BadRequest("El nombre debe tener entre 2 y 60 caracteres y solo contener letras, espacios o guiones.");
 
-        // Un voluntario reportó que esta validación de edad se comporta raro (Ticket 0)
-          if (mascota.Edad < 0 && mascota.Edad > 30)
+    // Validar formato de Especie
+    if (string.IsNullOrWhiteSpace(mascota.Especie) || 
+        mascota.Especie.Length < 2 || 
+        mascota.Especie.Length > 40 ||
+        !System.Text.RegularExpressions.Regex.IsMatch(mascota.Especie, @"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\-]+$"))
+        return BadRequest("La especie debe tener entre 2 y 40 caracteres y solo contener letras, espacios o guiones.");
+
+    // Validar edad (Ticket 0)
+    if (mascota.Edad < 0 || mascota.Edad > 30)
         return BadRequest("La edad debe estar entre 0 y 30 años.");
 
+    var cuidadorExiste = await _db.Cuidadores.AnyAsync(c => c.Id == mascota.CuidadorId);
+    if (!cuidadorExiste)
+        return BadRequest("El cuidador especificado no existe.");
 
-        var cuidadorExiste = await _db.Cuidadores.AnyAsync(c => c.Id == mascota.CuidadorId);
-        if (!cuidadorExiste)
-            return BadRequest("El cuidador especificado no existe.");
+    // Validar duplicado (Ticket 3)
 
-        // TODO (Ticket 2): normalizar texto y validar formato de Nombre/Especie
-        
-
-        // TODO (Ticket 3): validar duplicado (Nombre + CuidadorId) -> 409 Conflict
-
-        _db.Mascotas.Add(mascota);
-        await _db.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetAll), new { id = mascota.Id }, mascota);
-    }
+    _db.Mascotas.Add(mascota);
+    await _db.SaveChangesAsync();
+    return CreatedAtAction(nameof(GetAll), new { id = mascota.Id }, mascota);
+}
 
     // TODO (Ticket 4): Update(int id, Mascota mascotaActualizada)
 
