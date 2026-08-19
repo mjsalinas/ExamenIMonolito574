@@ -123,6 +123,17 @@ public class CuidadoresController : ControllerBase
 
     // TODO (Ticket 6): GetMascotasPorCuidador(int id)
     // Ruta esperada: GET api/cuidadores/{id}/mascotas -> 404 si el cuidador no existe
+    [HttpGet("{id}/mascotas")]
+    public async Task<IActionResult> GetMascotasPorCuidador(int id)
+    {
+        var existe = await _db.Cuidadores.AnyAsync(c => c.Id == id);
+        if (!existe)
+            return NotFound($"No existe un cuidador con id {id}.");
+
+        var mascotas = await _db.Mascotas.Where(m => m.CuidadorId == id).ToListAsync();
+        return Ok(mascotas);
+
+    }
     private string NormalizarTexto(string texto)
     {
         if (string.IsNullOrWhiteSpace(texto)) return texto;
