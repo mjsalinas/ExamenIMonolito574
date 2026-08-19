@@ -175,4 +175,21 @@ public async Task<IActionResult> Update(int id, Mascota mascotaActualizada)
 }
 
     // TODO (Ticket 5): Delete(int id) -> 409 si EnTratamiento es true
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+    if (id <= 0)
+        return BadRequest("El ID debe ser mayor que cero.");
+
+    var mascota = await _db.Mascotas.FindAsync(id);
+    if (mascota == null)
+        return NotFound($"No se encontró una mascota con ID {id}.");
+
+    if (mascota.EnTratamiento)
+        return Conflict("No se puede eliminar la mascota porque se encuentra en tratamiento médico.");
+
+    _db.Mascotas.Remove(mascota);
+    await _db.SaveChangesAsync();
+    return NoContent();
+}
 }
