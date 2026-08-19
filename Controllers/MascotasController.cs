@@ -58,6 +58,13 @@ public class MascotasController : ControllerBase
             return mascota.Nombre.ToUpper;
         // TODO (Ticket 3): validar duplicado (Nombre + CuidadorId) -> 409 Conflict
 
+        var CuidadorExiste = await _db.Cuidadores.AnyAsync(a => a.Id == mascota.CuidadorId);
+        if (!instructorExiste) return BadRequest("El cuidador ya existe.");
+
+        var MascotaExiste = await _db.Mascotas.AnyAsync(a => a.nombre == mascota.Nombre);
+        if (!MascotaExiste) return BadRequest("La mascota ya existe");
+
+
         _db.Mascotas.Add(mascota);
         await _db.SaveChangesAsync();
         return CreatedAtAction(nameof(GetAll), new { id = mascota.Id }, mascota);

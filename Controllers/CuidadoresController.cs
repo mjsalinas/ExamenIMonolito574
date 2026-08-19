@@ -55,6 +55,11 @@ public class CuidadoresController : ControllerBase
 
         // TODO (Ticket 3): validar duplicado (Nombre + Turno) -> 409 Conflict
 
+        var CuidadorExiste = await _db.Cuidadores.AnyAsync(a => a.nombre == cuidador.Nombre);
+        if (!CuidadorExiste) return BadRequest("el nombre de este cuidador ya esta registrado");
+
+
+
         if (string.IsNullOrWhiteSpace(cuidador.Nombre))
             return BadRequest("El nombre del cuidador es obligatorio.");
 
