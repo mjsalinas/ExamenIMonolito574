@@ -33,6 +33,12 @@ public class CuidadoresController : ControllerBase
         // formato de Nombre y que Turno sea exactamente "Mañana", "Tarde" o "Noche"
 
         // TODO (Ticket 3): validar duplicado (Nombre + Turno) -> 409 Conflict
+    var existe = await _db.Cuidadores
+        .AnyAsync(c => c.Nombre == cuidador.Nombre &&
+                   c.Turno == cuidador.Turno);
+
+    if (existe)
+            return Conflict("Ya existe un cuidador con el mismo nombre y turno.");
 
         if (string.IsNullOrWhiteSpace(cuidador.Nombre))
             return BadRequest("El nombre del cuidador es obligatorio.");
