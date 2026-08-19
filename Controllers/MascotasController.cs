@@ -116,6 +116,63 @@ public async Task<IActionResult> Create(Mascota mascota)
 }
 
     // TODO (Ticket 4): Update(int id, Mascota mascotaActualizada)
+    [HttpPut("{id}")]
+public async Task<IActionResult> Update(int id, Mascota mascotaActualizada)
+{
+    if (id <= 0)
+        return BadRequest("El ID debe ser mayor que cero.");
+
+    if (id != mascotaActualizada.Id)
+        return BadRequest("El ID de la URL no coincide con el ID del objeto.");
+
+    // Normalizar texto
+    mascotaActualizada.Nombre = NormalizarTexto(mascotaActualizada.Nombre);
+    mascotaActualizada.Especie = NormalizarTexto(mascotaActualizada.Especie);
+
+    // Validar formato
+    if (string.IsNullOrWhiteSpace(mascotaActualizada.Nombre) || 
+        mascotaActualizada.Nombre.Length < 2 || 
+        mascotaActualizada.Nombre.Length > 60 ||
+        !System.Text.RegularExpressions.Regex.IsMatch(mascotaActualizada.Nombre, @"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\-]+$"))
+        return BadRequest("El nombre debe tener entre 2 y 60 caracteres y solo contener letras, espacios o guiones.");
+
+    if (string.IsNullOrWhiteSpace(mascotaActualizada.Especie) || 
+        mascotaActualizada.Especie.Length < 2 || 
+        mascotaActualizada.Especie.Length > 40 ||
+        !System.Text.RegularExpressions.Regex.IsMatch(mascotaActualizada.Especie, @"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\-]+$"))
+        return BadRequest("La especie debe tener entre 2 y 40 caracteres y solo contener letras, espacios o guiones.");
+
+    // Validar edad
+    if (mascotaActualizada.Edad < 0 || mascotaActualizada.Edad > 30)
+        return BadRequest("La edad debe estar entre 0 y 30 años.");
+
+    // Validar que el cuidador existe
+    var cuidadorExiste = await _db.Cuidadores.AnyAsync(c => c.Id == mascotaActualizada.CuidadorId);
+    if (!cuidadorExiste)
+        return BadRequest("El cuidador especificado no existe.");
+
+    // Validar duplicado (excluyendo el propio registro)
+    var existeDuplicado = await _db.Mascotas
+        .AnyAsync(m => m.Nombre == mascotaActualizada.Nombre && 
+                       m.CuidadorId == mascotaActualizada.CuidadorId && 
+                       m.Id != id);
+
+    if (existeDuplicado)
+        return Conflict($"Ya existe otra mascota con el nombre '{mascotaActualizada.Nombre}' asignada a este cuidador.");
+
+    var mascotaExistente = await _db.Mascotas.FindAsync(id);
+    if (mascotaExistente == null)
+        return NotFound($"No se encontró una mascota con ID {id}.");
+
+    mascotaExistente.Nombre = mascotaActualizada.Nombre;
+    mascotaExistente.Especie = mascotaActualizada.Especie;
+    mascotaExistente.Edad = mascotaActualizada.Edad;
+    mascotaExistente.EnTratamiento = mascotaActualizada.EnTratamiento;
+    mascotaExistente.CuidadorId = mascotaActualizada.CuidadorId;
+
+    await _db.SaveChangesAsync();
+    return NoContent();
+}
 
     // TODO (Ticket 5): Delete(int id) -> 409 si EnTratamiento es true
 }

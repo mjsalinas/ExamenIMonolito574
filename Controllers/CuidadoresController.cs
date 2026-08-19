@@ -101,7 +101,46 @@ private bool EsNombreValido(string nombre)
 }
 
     // TODO (Ticket 4): Update(int id, Cuidador cuidadorActualizado)
-    
+    [HttpPut("{id}")]
+public async Task<IActionResult> Update(int id, Cuidador cuidadorActualizado)
+{
+    if (id <= 0)
+        return BadRequest("El ID debe ser mayor que cero.");
+
+    if (id != cuidadorActualizado.Id)
+        return BadRequest("El ID de la URL no coincide con el ID del objeto.");
+
+    // Normalizar texto
+    cuidadorActualizado.Nombre = NormalizarTexto(cuidadorActualizado.Nombre);
+    cuidadorActualizado.Turno = cuidadorActualizado.Turno?.Trim();
+
+    // Validar formato
+    if (!EsNombreValido(cuidadorActualizado.Nombre))
+        return BadRequest("El nombre debe tener entre 2 y 100 caracteres y solo contener letras, espacios o guiones.");
+
+    var turnosPermitidos = new[] { "Mañana", "Tarde", "Noche" };
+    if (string.IsNullOrWhiteSpace(cuidadorActualizado.Turno) || !turnosPermitidos.Contains(cuidadorActualizado.Turno))
+        return BadRequest("El turno debe ser exactamente: 'Mañana', 'Tarde' o 'Noche'.");
+
+    // Validar duplicado (excluyendo el propio registro)
+    var existeDuplicado = await _db.Cuidadores
+        .AnyAsync(c => c.Nombre == cuidadorActualizado.Nombre && 
+                       c.Turno == cuidadorActualizado.Turno && 
+                       c.Id != id);
+
+    if (existeDuplicado)
+        return Conflict($"Ya existe otro cuidador con el nombre '{cuidadorActualizado.Nombre}' y turno '{cuidadorActualizado.Turno}'.");
+
+    var cuidadorExistente = await _db.Cuidadores.FindAsync(id);
+    if (cuidadorExistente == null)
+        return NotFound($"No se encontró un cuidador con ID {id}.");
+
+    cuidadorExistente.Nombre = cuidadorActualizado.Nombre;
+    cuidadorExistente.Turno = cuidadorActualizado.Turno;
+
+    await _db.SaveChangesAsync();
+    return NoContent();
+}
 
     // TODO (Ticket 5): Delete(int id) -> 409 si el cuidador tiene mascotas asignadas
 
