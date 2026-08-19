@@ -25,6 +25,20 @@ public class CuidadoresController : ControllerBase
     }
 
     // TODO (Ticket 1): GetById(int id) -> 400 si id <= 0, 404 si no existe
+    [HttpGet("{id}")]
+public async Task<IActionResult> GetById(int id)
+{
+    if (id <= 0)
+        return BadRequest("El id debe ser mayor que cero.");
+
+    var mascota = await _db.Mascotas.Include(m => m.Cuidador)
+        .FirstOrDefaultAsync(m => m.Id == id);
+
+    if (mascota == null)
+        return NotFound($"No existe una mascota con id {id}.");
+
+    return Ok(mascota);
+}
 
     [HttpPost]
     public async Task<IActionResult> Create(Cuidador cuidador)
