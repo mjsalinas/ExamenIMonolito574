@@ -23,12 +23,42 @@ public class CuidadoresController : ControllerBase
     }
 
     // TODO (Ticket 1): GetById(int id) -> 400 si id <= 0, 404 si no existe
+    [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+    {
+        if (id <= 0)
+        {
+            
+            return BadRequest();
+        }
+
+        var cuidador = await _db.Cuidadores.FindAsync(id);
+        if (cuidador == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(cuidador);
+    }
 
     [HttpPost]
     public async Task<IActionResult> Create(Cuidador cuidador)
     {
         // TODO (Ticket 2): normalizar texto (espacios, capitalización) y validar
         // formato de Nombre y que Turno sea exactamente "Mañana", "Tarde" o "Noche"
+        cuidador.Nombre = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(cuidador.Nombre.Trim());
+        cuidador.Turno = cuidador.Turno.Trim();
+
+        if (string.IsNullOrWhiteSpace(cuidador.Turno) || 
+            (cuidador.Turno != "Mañana" && cuidador.Turno != "Tarde" && cuidador.Turno != "Noche"))
+        {
+            return BadRequest("El turno debe ser 'Mañana', 'Tarde' o 'Noche'.");
+        }
+        var existeDuplicado = await _db.Cuidadores.AnyAsync(c => c.Nombre.ToLower() == cuidador.Nombre.ToLower() && c.Turno == cuidador.Turno);
+        if (existeDuplicado)
+        {
+            return Conflict("Ya existe un cuidador con el mismo nombre y turno.");
+        }
 
         // TODO (Ticket 3): validar duplicado (Nombre + Turno) -> 409 Conflict
 
