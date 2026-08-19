@@ -63,6 +63,13 @@ public class MascotasController : ControllerBase
         mascota.Especie = mascota.Especie.Trim();
 
         // TODO (Ticket 3): validar duplicado (Nombre + CuidadorId) -> 409 Conflict
+        var existeDuplicado = await _db.Mascotas.AnyAsync(m => m.Nombre.ToLower() == mascota.Nombre.ToLower() && m.CuidadorId == mascota.CuidadorId);
+        if (existeDuplicado)
+        {
+            return Conflict("Ya existe una mascota con el mismo nombre asignada al mismo cuidador.");
+
+        }
+            
 
         _db.Mascotas.Add(mascota);
         await _db.SaveChangesAsync();
