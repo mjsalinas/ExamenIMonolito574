@@ -26,6 +26,15 @@ public class CuidadoresController : ControllerBase
 
     // TODO (Ticket 1): GetById(int id) -> 400 si id <= 0, 404 si no existe
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var cuidador = await _db.Cuidadores.FindAsync(id);
+        if (id <= 0) return BadRequest("Id Inválido.");
+        if (cuidador is null) return NotFound();
+        return Ok(cuidador);
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create(Cuidador cuidador)
     {
