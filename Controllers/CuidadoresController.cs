@@ -23,6 +23,19 @@ public class CuidadoresController : ControllerBase
     }
 
     // TODO (Ticket 1): GetById(int id) -> 400 si id <= 0, 404 si no existe
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var mascota = await _db.Mascotas
+            .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (id <= 0) return NoContent();
+
+        if (mascota is null) return NotFound();
+
+
+        return Ok(mascota);
+    }
 
     [HttpPost]
     public async Task<IActionResult> Create(Cuidador cuidador)
