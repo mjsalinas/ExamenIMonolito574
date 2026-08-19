@@ -82,4 +82,16 @@ public class MascotasController : ControllerBase
     }
 
     // TODO (Ticket 5): Delete(int id) -> 409 si EnTratamiento es true
+
+     public async Task<IActionResult> Delete(int id)
+    {
+        var libro = await _db.Mascotas.FindAsync(id);
+        if (libro == null)
+            return NotFound();
+
+        _db.Mascotas.Remove(libro);
+        await _db.SaveChangesAsync();
+
+        return NoContent();
+    }
 }
