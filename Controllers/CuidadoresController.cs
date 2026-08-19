@@ -89,7 +89,39 @@ public class CuidadoresController : ControllerBase
 
     // TODO (Ticket 4): Update(int id, Cuidador cuidadorActualizado)
 
+
+
+    
+
     // TODO (Ticket 5): Delete(int id) -> 409 si el cuidador tiene mascotas asignadas
+    // 
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        if (id <= 0)
+            return BadRequest("El id debe ser mayor que cero.");
+
+        var cuidador = await _db.Cuidadores
+            .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (cuidador is null)
+            return NotFound($"No se encontró el cuidador con id {id}.");
+
+        var tieneMascotasAsignadas = await _db.Mascotas
+            .AnyAsync(m => m.CuidadorId == id);
+
+        if (tieneMascotasAsignadas)
+        {
+            return Conflict(
+                "No se puede eliminar el cuidador porque tiene mascotas asignadas.");
+        }
+
+        _db.Cuidadores.Remove(cuidador);
+        await _db.SaveChangesAsync();
+
+        return NoContent();
+    }
+
 
     // TODO (Ticket 6): GetMascotasPorCuidador(int id)
     // Ruta esperada: GET api/cuidadores/{id}/mascotas -> 404 si el cuidador no existe
