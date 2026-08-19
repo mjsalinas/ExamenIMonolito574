@@ -6,7 +6,7 @@ public class Cuidador
     public string Nombre { get; set; } = string.Empty;
 
     // Valor esperado (aún no validado): "Mañana", "Tarde" o "Noche" (Ticket 2)
-    public string Turno { get; set; } = string.Empty;
+    public string Turno { get; set; } = string.Equals("Mañana", "Tarde", "Noche");
 
     public List<Mascota> Mascotas { get; set; } = new();
 }

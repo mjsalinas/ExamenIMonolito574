@@ -54,7 +54,8 @@ public class MascotasController : ControllerBase
             return BadRequest("El cuidador especificado no existe.");
 
         // TODO (Ticket 2): normalizar texto y validar formato de Nombre/Especie
-
+        if (string.(mascota.Nombre))
+            return mascota.Nombre.ToUpper;
         // TODO (Ticket 3): validar duplicado (Nombre + CuidadorId) -> 409 Conflict
 
         _db.Mascotas.Add(mascota);

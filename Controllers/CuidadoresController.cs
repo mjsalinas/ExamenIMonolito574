@@ -33,13 +33,17 @@ public class CuidadoresController : ControllerBase
             .FirstOrDefaultAsync(c => c.Id == id);
         if (cuidador is null) return NotFound();
         if (cuidador is < 0) return BadRequest();
-        return Ok(curso);
+        return Ok(cuidador);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create(Cuidador cuidador)
     {
         // TODO (Ticket 2): normalizar texto (espacios, capitalización) y validar
+        if (string.(cuidador.Nombre))
+            return cuidador.Nombre.ToUpper;
+
+
         // formato de Nombre y que Turno sea exactamente "Mañana", "Tarde" o "Noche"
 
         // TODO (Ticket 3): validar duplicado (Nombre + Turno) -> 409 Conflict
