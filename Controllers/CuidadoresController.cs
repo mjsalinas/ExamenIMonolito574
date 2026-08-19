@@ -49,6 +49,7 @@ public class CuidadoresController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(Cuidador cuidador)
     {
+        cuidador.Nombre = Normalize(cuidador.Nombre);
 
         if (string.IsNullOrWhiteSpace(cuidador.Nombre))
             return BadRequest("El nombre del cuidador es obligatorio.");
@@ -59,6 +60,11 @@ public class CuidadoresController : ControllerBase
         var turnosValidos = new[] { "Mañana", "Tarde", "Noche" };
         if (!turnosValidos.Contains(cuidador.Turno))
             return BadRequest("El turno debe ser 'Mañana', 'Tarde' o 'Noche'.");
+
+        var duplicado = await _db.Cuidadores.AnyAsync(c =>
+            c.Nombre == cuidador.Nombre && c.Turno == cuidador.Turno);
+        if (duplicado)
+            return Conflict("Ya existe un cuidador con ese nombre en ese turno.");
 
         _db.Cuidadores.Add(cuidador);
         await _db.SaveChangesAsync();

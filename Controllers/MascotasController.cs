@@ -75,6 +75,11 @@ public class MascotasController : ControllerBase
         if (!cuidadorExiste)
             return BadRequest("El cuidador especificado no existe.");
 
+        var duplicada = await _db.Mascotas.AnyAsync(m =>
+            m.Nombre == mascota.Nombre && m.CuidadorId == mascota.CuidadorId);
+        if (duplicada)
+            return Conflict("Ya existe una mascota con ese nombre asignada a ese cuidador.");
+
         _db.Mascotas.Add(mascota);
         await _db.SaveChangesAsync();
         return CreatedAtAction(nameof(GetAll), new { id = mascota.Id }, mascota);
