@@ -51,6 +51,13 @@ public class CuidadoresController : ControllerBase
 
 
         // TODO (Ticket 3): validar duplicado (Nombre + Turno) -> 409 Conflict
+        var cuidadores = await _db.Cuidadores.ToListAsync();
+        for (int i = 0; i < cuidadores.Count; i++)
+        {
+            if (cuidadores[i].Turno == TurnoLimpio && cuidadores[i].Nombre == NombreLimpio) return Conflict();
+        }
+
+
 
         if (string.IsNullOrWhiteSpace(cuidador.Nombre))
             return BadRequest("El nombre del cuidador es obligatorio.");

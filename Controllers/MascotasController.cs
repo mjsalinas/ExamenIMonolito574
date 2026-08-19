@@ -66,6 +66,13 @@ public class MascotasController : ControllerBase
 
 
         // TODO (Ticket 3): validar duplicado (Nombre + CuidadorId) -> 409 Conflict
+        var mascotas = await _db.Mascotas.ToListAsync();
+        for (int i = 0; i < mascotas.Count; i++)
+        {
+            if (mascotas[i].Nombre == NombreLimpio && mascotas[i].CuidadorId == mascota.Id) return Conflict();
+        }
+
+
 
         _db.Mascotas.Add(mascota);
         await _db.SaveChangesAsync();
