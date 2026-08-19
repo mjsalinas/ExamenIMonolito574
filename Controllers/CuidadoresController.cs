@@ -88,10 +88,16 @@ private bool EsNombreValido(string nombre)
         return BadRequest("El turno debe ser exactamente: 'Mañana', 'Tarde' o 'Noche'.");
 
     // Validar duplicado (Ticket 3)
-
+    
     _db.Cuidadores.Add(cuidador);
     await _db.SaveChangesAsync();
     return CreatedAtAction(nameof(GetAll), new { id = cuidador.Id }, cuidador);
+
+    var existeDuplicado = await _db.Cuidadores
+    .AnyAsync(c => c.Nombre == cuidador.Nombre && c.Turno == cuidador.Turno);
+    
+    if (existeDuplicado)
+    return Conflict($"Ya existe un cuidador con el nombre '{cuidador.Nombre}' y turno '{cuidador.Turno}'.");
 }
 
     // TODO (Ticket 4): Update(int id, Cuidador cuidadorActualizado)

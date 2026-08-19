@@ -103,10 +103,16 @@ public async Task<IActionResult> Create(Mascota mascota)
         return BadRequest("El cuidador especificado no existe.");
 
     // Validar duplicado (Ticket 3)
-
+// Validar duplicado: mismo Nombre + CuidadorId
+    var existeDuplicado = await _db.Mascotas
+    .AnyAsync(m => m.Nombre == mascota.Nombre && m.CuidadorId == mascota.CuidadorId);
+    
+    if (existeDuplicado)
+    return Conflict($"Ya existe una mascota con el nombre '{mascota.Nombre}' asignada a este cuidador.");
     _db.Mascotas.Add(mascota);
     await _db.SaveChangesAsync();
     return CreatedAtAction(nameof(GetAll), new { id = mascota.Id }, mascota);
+    
 }
 
     // TODO (Ticket 4): Update(int id, Mascota mascotaActualizada)
