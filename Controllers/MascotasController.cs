@@ -12,14 +12,16 @@ public class MascotasController : ControllerBase
 
     public MascotasController(RefugioDbContext db) => _db = db;
 
-    [HttpGet]
-    public async Task<IActionResult> GetAll()
+    [HttpGet("id")]
+    public async Task<IActionResult> GetAll(int id)
     {
+        if (id <= 0) return BadRequest("El ID debe ser mayor a cero.");
         var mascotas = await _db.Mascotas
             .Include(m => m.Cuidador)
-            .OrderBy(m => m.Nombre, StringComparer.CurrentCultureIgnoreCase)
-            .ToListAsync();
-
+            .FirstOrDefaultAsync(m => m.Id == id);
+            //.OrderBy(m => m.Nombre, StringComparer.CurrentCultureIgnoreCase)
+            //.ToListAsync();
+        if (mascotas == null) return NotFound($"No se encontró la mascota con ID {id}.");
         return Ok(mascotas);
     }
 

@@ -12,8 +12,8 @@ public class CuidadoresController : ControllerBase
 
     public CuidadoresController(RefugioDbContext db) => _db = db;
 
-    [HttpGet]
-    public async Task<IActionResult> GetAll()
+    [HttpGet("id")]
+    public async Task<IActionResult> GetAll(int id)
     {
         var cuidadores = await _db.Cuidadores
             .OrderBy(c => c.Nombre, StringComparer.CurrentCultureIgnoreCase)
@@ -23,7 +23,7 @@ public class CuidadoresController : ControllerBase
     }
 
     // TODO (Ticket 1): GetById(int id) -> 400 si id <= 0, 404 si no existe
-
+    
     [HttpPost]
     public async Task<IActionResult> Create(Cuidador cuidador)
     {
