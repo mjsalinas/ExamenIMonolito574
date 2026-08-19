@@ -16,8 +16,13 @@ public class CuidadoresController : ControllerBase
     public async Task<IActionResult> GetAll(int id)
     {
         var cuidadores = await _db.Cuidadores
-            .OrderBy(c => c.Nombre, StringComparer.CurrentCultureIgnoreCase)
-            .ToListAsync();
+        .Include(c => c.Mascotas)
+        .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (cuidadores == null) return NotFound($"No se encontró el cuidador con ID {id}.");
+
+            //.OrderBy(c => c.Nombre, StringComparer.CurrentCultureIgnoreCase)
+            //.ToListAsync();
 
         return Ok(cuidadores);
     }
