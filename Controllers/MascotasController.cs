@@ -24,6 +24,16 @@ public class MascotasController : ControllerBase
     }
 
     // TODO (Ticket 1): GetById(int id) -> 400 si id <= 0, 404 si no existe
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var mascota = await _db.Mascotas.Include(m => m.Cuidador)
+            .FirstOrDefaultAsync(m => m.Id == id);
+        if (mascota is null) return NotFound();
+        if (mascota is <0) return BadRequest();
+        return Ok(mascota);
+    }
+
 
     [HttpPost]
     public async Task<IActionResult> Create(Mascota mascota)
