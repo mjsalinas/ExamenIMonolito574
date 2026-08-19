@@ -16,12 +16,24 @@ public class CuidadoresController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var cuidadores = await _db.Cuidadores
-            .OrderBy(c => c.Nombre, StringComparer.CurrentCultureIgnoreCase)
+            .OrderBy(c => c.Nombre)
             .ToListAsync();
 
         return Ok(cuidadores);
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        if (id <= 0)
+            return BadRequest("El id debe ser mayor que cero.");
+
+        var cuidador = await _db.Cuidadores.FindAsync(id);
+        if (cuidador is null)
+            return NotFound();
+
+        return Ok(cuidador);
+    }
     // TODO (Ticket 1): GetById(int id) -> 400 si id <= 0, 404 si no existe
 
     [HttpPost]
