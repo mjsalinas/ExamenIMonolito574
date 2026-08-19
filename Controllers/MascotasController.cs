@@ -74,5 +74,21 @@ public class MascotasController : ControllerBase
         await _db.SaveChangesAsync();
         return NoContent();
     }
+    [HttpGet("{id}/mascotas")]
+public async Task<IActionResult> GetMascotas(int id)
+{
+    var cuidadorExiste = await _db.Cuidadores
+        .AnyAsync(c => c.Id == id);
+    
+    if(!cuidadorExiste)
+    return NotFound($"El cuidador con id {id} no existe.");
+
+    var mascotas = await _db.Mascotas
+    .Where(m => m.CuidadorId == id)
+    .ToListAsync();
+    return Ok(mascotas);
+}
+    
+
   
 }
