@@ -116,4 +116,15 @@ public class CuidadoresController : ControllerBase
 
     // TODO (Ticket 6): GetMascotasPorCuidador(int id)
     // Ruta esperada: GET api/cuidadores/{id}/mascotas -> 404 si el cuidador no existe
+    [HttpGet("{id}/mascotas")]
+    public async Task<IActionResult> obtenerMascotasCuidador(int id)
+    {
+        var cuidador = await _db.Cuidadores.FindAsync(id);
+
+        if (cuidador is null) return NotFound();
+
+        var mascotas = await _db.Mascotas.Where(m => m.CuidadorId == id).ToListAsync();
+
+        return Ok(mascotas);
+    }
 }
