@@ -2,7 +2,9 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using RefugioMascotas.Models;
+
 
 namespace RefugioMascotas.Controllers;
 
@@ -128,6 +130,22 @@ public class CuidadoresController : ControllerBase
         return NoContent();
     }
 
-    // TODO (Ticket 6): GetMascotasPorCuidador(int id)
-    // Ruta esperada: GET api/cuidadores/{id}/mascotas -> 404 si el cuidador no existe
+    [HttpGet("{id}/mascotas")]
+    public async Task<IActionResult> GetMascotasPorCuidador(int id)
+    {
+        if (id <= 0)
+            return BadRequest("El id debe ser mayor que cero.");
+
+        var cuidador = await _db.Cuidadores.FindAsync(id);
+        if (cuidador is null)
+            return NotFound();
+
+        var mascotas = await _db.Mascotas
+            .Include(m => m.Cuidador)
+            .Where(m => m.CuidadorId == id)
+            .ToListAsync();
+
+        return Ok(mascotas);
+    }
+
 }
