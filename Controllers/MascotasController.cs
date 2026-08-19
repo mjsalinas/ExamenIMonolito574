@@ -63,6 +63,23 @@ public class MascotasController : ControllerBase
     }
 
     // TODO (Ticket 4): Update(int id, Mascota mascotaActualizada)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, Mascota mascota)
+    {
+        if (id != mascota.Id)
+            return BadRequest("El id de la ruta no coincide con el id del cuerpo.");
+
+        var existente = await _db.Mascotas.FindAsync(id);
+        if (existente == null)
+            return NotFound();
+
+        existente.Nombre = mascota.Nombre;
+        existente.Especie =mascota.Especie;
+
+        await _db.SaveChangesAsync();
+
+        return NoContent();
+    }
 
     // TODO (Ticket 5): Delete(int id) -> 409 si EnTratamiento es true
 }
