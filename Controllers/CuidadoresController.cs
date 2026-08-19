@@ -45,6 +45,13 @@ public class CuidadoresController : ControllerBase
 
 
         // formato de Nombre y que Turno sea exactamente "Mañana", "Tarde" o "Noche"
+     
+        if (string.(cuidador.Turno.Equals("Tarde"))
+            return Ok(cuidador);
+        if (string.(cuidador.Turno.Equals("Manana"))
+            return Ok(cuidador);
+        if (string.(cuidador.Turno.Equals("Noche"))
+                    return Ok(cuidador);
 
         // TODO (Ticket 3): validar duplicado (Nombre + Turno) -> 409 Conflict
 
