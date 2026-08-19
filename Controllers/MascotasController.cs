@@ -25,7 +25,7 @@ public class MascotasController : ControllerBase
     }
 
     // TODO (Ticket 1): GetById(int id) -> 400 si id <= 0, 404 si no existe
-
+// integracion de http get (id)
 [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
