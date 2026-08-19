@@ -26,18 +26,18 @@ public class MascotasController : ControllerBase
 
     // TODO (Ticket 1): GetById(int id) -> 400 si id <= 0, 404 si no existe
     [HttpGet("{id}")]
-public async Task<IActionResult> GetById(int id)
-{
-    if (id <= 0)
-        return BadRequest("El id debe ser mayor que cero.");
+    public async Task<IActionResult> GetById(int id)
+    {
+        if (id <= 0)
+            return BadRequest("El id debe ser mayor que cero.");
 
-    var cuidador = await _db.Cuidadores.FindAsync(id);
+        var cuidador = await _db.Cuidadores.FindAsync(id);
 
-    if (cuidador == null)
-        return NotFound($"No existe un cuidador con id {id}.");
+        if (cuidador == null)
+            return NotFound($"No existe un cuidador con id {id}.");
 
-    return Ok(cuidador);
-}
+        return Ok(cuidador);
+    }
 
     [HttpPost]
     public async Task<IActionResult> Create(Mascota mascota)
@@ -52,7 +52,7 @@ public async Task<IActionResult> GetById(int id)
         if (mascota.Edad <= 0 || mascota.Edad > 30)
             return BadRequest("La edad debe estar entre 0 y 30 años.");
 
-        
+
 
         var cuidadorExiste = await _db.Cuidadores.AnyAsync(c => c.Id == mascota.CuidadorId);
         if (!cuidadorExiste)
