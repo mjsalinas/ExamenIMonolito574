@@ -74,6 +74,10 @@ public class MascotasController : ControllerBase
         await _db.SaveChangesAsync();
         return NoContent();
     }
+    
+
+
+
     [HttpGet("{id}/mascotas")]
 public async Task<IActionResult> GetMascotas(int id)
 {
