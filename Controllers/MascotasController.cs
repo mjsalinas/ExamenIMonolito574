@@ -77,6 +77,28 @@ public class MascotasController : ControllerBase
     }
 
     // TODO (Ticket 4): Update(int id, Mascota mascotaActualizada)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, Mascota mascotaActualizada)
+    {
+        if (id <= 0)
+            return BadRequest("El ID debe ser un número positivo.");
+
+        var mascotaExistente = await _db.Mascotas.FindAsync(id);
+        if (mascotaExistente == null)
+            return NotFound();
+
+        var cuidadorExiste = await _db.Cuidadores.AnyAsync(c => c.Id == mascotaActualizada.CuidadorId);
+        if (!cuidadorExiste)
+            return BadRequest("El cuidador especificado no existe.");
+
+            mascotaExistente.Nombre = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(mascotaActualizada.Nombre.Trim());
+            mascotaExistente.Especie = mascotaActualizada.Especie.Trim();
+            mascotaExistente.Edad = mascotaActualizada.Edad;
+            mascotaExistente.CuidadorId = mascotaActualizada.CuidadorId;
+
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
 
     // TODO (Ticket 5): Delete(int id) -> 409 si EnTratamiento es true
 }
