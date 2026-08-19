@@ -134,5 +134,22 @@ public class MascotasController : ControllerBase
         return NoContent();
     }
 
-    // TODO (Ticket 5): Delete(int id) -> 409 si EnTratamiento is true
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        if (id <= 0)
+            return BadRequest("El id debe ser mayor que cero.");
+//NO se puede eliminar mascotas asignadas
+        var mascota = await _db.Mascotas.FindAsync(id);
+        if (mascota is null)
+            return NotFound();
+
+//No se puede eliminar una mascota que está en tratamiento.
+        if (mascota.EnTratamiento)
+            return Conflict("No se puede eliminar una mascota que está en tratamiento.");
+
+        _db.Mascotas.Remove(mascota);
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
 }
