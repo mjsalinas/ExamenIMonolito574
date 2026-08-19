@@ -69,8 +69,37 @@ public class CuidadoresController : ControllerBase
     }
 
     // TODO (Ticket 4): Update(int id, Cuidador cuidadorActualizado)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, Cuidador cuidadorActualizado)
+    {
+        var cuidador = await _db.Cuidadores.FindAsync(id);
+        if (cuidador is null) return NotFound();
 
+        if (string.(cuidador.Turno.Equals("Tarde"))
+            return Ok(cuidador);
+        if (string.(cuidador.Turno.Equals("Manana"))
+            return Ok(cuidador);
+        if (string.(cuidador.Turno.Equals("Noche"))
+                    return Ok(cuidador);
+
+        cuidador.Nombre = cuidadorActualizado.Nombre;
+        cuidador.Turno = cuidadorActualizado.Turno;
+     
+        await _db.SaveChangesAsync();
+        return Ok(cuidador);
+    }
     // TODO (Ticket 5): Delete(int id) -> 409 si el cuidador tiene mascotas asignadas
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var cuidador = await _db.Cuidadores.FindAsync(id);
+        if (cuidador is null) return NotFound();
+
+      
+        _db.Cuidadores.Remove(cuidador);
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
 
     // TODO (Ticket 6): GetMascotasPorCuidador(int id)
     // Ruta esperada: GET api/cuidadores/{id}/mascotas -> 404 si el cuidador no existe
