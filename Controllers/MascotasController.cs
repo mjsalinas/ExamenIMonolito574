@@ -56,6 +56,14 @@ public class MascotasController : ControllerBase
             return BadRequest("El cuidador especificado no existe.");
 
         // TODO (Ticket 2): normalizar texto y validar formato de Nombre/Especie
+        var NombreLimpio = mascota.Nombre.Trim().ToUpper();
+        var EspecieLimpio = mascota.Especie.Trim().ToUpper();
+
+        if (NombreLimpio.Length > 60 || NombreLimpio.Length < 2) return BadRequest();
+        if (EspecieLimpio.Length > 40 || EspecieLimpio.Length < 2) return BadRequest();
+
+
+
 
         // TODO (Ticket 3): validar duplicado (Nombre + CuidadorId) -> 409 Conflict
 

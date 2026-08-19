@@ -42,6 +42,13 @@ public class CuidadoresController : ControllerBase
     {
         // TODO (Ticket 2): normalizar texto (espacios, capitalización) y validar
         // formato de Nombre y que Turno sea exactamente "Mañana", "Tarde" o "Noche"
+        var NombreLimpio = cuidador.Nombre.Trim().ToUpper();
+        var TurnoLimpio = cuidador.Turno.Trim().ToUpper();
+
+        if (NombreLimpio.Length > 100 || NombreLimpio.Length < 2) return BadRequest();
+
+        if ((TurnoLimpio != "Mañana") && (TurnoLimpio != "Tarde") && (TurnoLimpio != "Noche")) return BadRequest();
+
 
         // TODO (Ticket 3): validar duplicado (Nombre + Turno) -> 409 Conflict
 
@@ -49,7 +56,7 @@ public class CuidadoresController : ControllerBase
             return BadRequest("El nombre del cuidador es obligatorio.");
 
         _db.Cuidadores.Add(cuidador);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync();   
         return CreatedAtAction(nameof(GetAll), new { id = cuidador.Id }, cuidador);
     }
 
