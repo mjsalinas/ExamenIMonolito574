@@ -29,7 +29,7 @@ public class CuidadoresController : ControllerBase
         var mascota = await _db.Mascotas
             .FirstOrDefaultAsync(c => c.Id == id);
 
-        if (id <= 0) return NoContent();
+        if (id <= 0) return BadRequest();
 
         if (mascota is null) return NotFound();
 
