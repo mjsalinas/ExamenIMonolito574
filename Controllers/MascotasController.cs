@@ -15,12 +15,13 @@ public class MascotasController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var mascotas = await _db.Mascotas
-            .Include(m => m.Cuidador)
-            .OrderBy(m => m.Nombre, StringComparer.CurrentCultureIgnoreCase)
-            .ToListAsync();
+        var mascotas = await _db.Mascotas.Include(m => m.Cuidador).ToListAsync();
 
-        return Ok(mascotas);
+        var catalogo = mascotas
+            .OrderBy(m => m.Nombre, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+
+        return Ok(catalogo);
     }
 
     // TODO (Ticket 1): GetById(int id) -> 400 si id <= 0, 404 si no existe
