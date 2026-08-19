@@ -81,5 +81,32 @@ public class MascotasController : ControllerBase
 
     // TODO (Ticket 4): Update(int id, Mascota mascotaActualizada)
 
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, Mascota mascotaActualizado)
+    {
+        var mascota = await _db.Mascotas.FindAsync(id);
+
+        if (mascota is null) return NotFound();
+
+        mascota.Nombre = mascotaActualizado.Nombre;
+        mascota.Especie = mascotaActualizado.Especie;
+
+
+        var NombreLimpio = mascota.Nombre.Trim().ToUpper();
+        var EspecieLimpio = mascota.Especie.Trim().ToUpper();
+        if (NombreLimpio.Length > 60 || NombreLimpio.Length < 2) return BadRequest();
+        if (EspecieLimpio.Length > 40 || EspecieLimpio.Length < 2) return BadRequest();
+
+        //var cuidadores = await _db.Cuidadores.ToListAsync();
+        //for (int i = 0; i < cuidadores.Count; i++)
+        //{
+        //    if (cuidadores[i].Turno == TurnoLimpio && cuidadores[i].Nombre == NombreLimpio) return Conflict();
+        //}
+
+        await _db.SaveChangesAsync();
+
+        return Ok(mascotaActualizado);
+    }
+
     // TODO (Ticket 5): Delete(int id) -> 409 si EnTratamiento es true
 }

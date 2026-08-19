@@ -68,6 +68,34 @@ public class CuidadoresController : ControllerBase
     }
 
     // TODO (Ticket 4): Update(int id, Cuidador cuidadorActualizado)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, Cuidador cuidadorActualizado)
+    {
+        var cuidador = await _db.Cuidadores.FindAsync(id);
+
+        if (cuidador is null) return NotFound();
+
+        cuidador.Nombre = cuidadorActualizado.Nombre;
+        cuidador.Turno = cuidadorActualizado.Turno;
+
+
+        var NombreLimpio = cuidador.Nombre.Trim().ToUpper();
+        var TurnoLimpio = cuidador.Turno.Trim().ToUpper();
+
+        if (NombreLimpio.Length > 100 || NombreLimpio.Length < 2) return BadRequest();
+
+        if ((TurnoLimpio != "Mañana") && (TurnoLimpio != "Tarde") && (TurnoLimpio != "Noche")) return BadRequest();
+
+        var cuidadores = await _db.Cuidadores.ToListAsync();
+        for (int i = 0; i < cuidadores.Count; i++)
+        {
+            if (cuidadores[i].Turno == TurnoLimpio && cuidadores[i].Nombre == NombreLimpio) return Conflict();
+        }
+
+        await _db.SaveChangesAsync();
+
+        return Ok(cuidador);
+    }
 
     // TODO (Ticket 5): Delete(int id) -> 409 si el cuidador tiene mascotas asignadas
 
