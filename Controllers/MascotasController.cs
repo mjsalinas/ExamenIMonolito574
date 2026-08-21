@@ -53,6 +53,9 @@ public class MascotasController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(Mascota mascota)
     {
+        if (mascota.CuidadorId <= 0)
+            return BadRequest("El cuidador especificado no es válido.");
+
         mascota.Nombre = Normalize(mascota.Nombre);
         mascota.Especie = Normalize(mascota.Especie);
 
@@ -90,6 +93,9 @@ public class MascotasController : ControllerBase
     {
         if (id <= 0)
             return BadRequest("El id debe ser mayor que cero.");
+
+        if (mascotaActualizada.CuidadorId <= 0)
+            return BadRequest("El cuidador especificado no es válido.");
 
         var mascota = await _db.Mascotas.FindAsync(id);
         if (mascota is null)

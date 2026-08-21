@@ -18,7 +18,7 @@ public class RefugioDbContext : DbContext
             .HasForeignKey(m => m.CuidadorId);
 
         modelBuilder.Entity<Cuidador>().HasData(
-            new Cuidador { Id = 1, Nombre = "Maria Lopez", Turno = "Manana" },
+            new Cuidador { Id = 1, Nombre = "Maria Lopez", Turno = "Mañana" },
             new Cuidador { Id = 2, Nombre = "Carlos Perez", Turno = "Tarde" }
         );
 

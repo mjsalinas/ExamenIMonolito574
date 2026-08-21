@@ -24,6 +24,14 @@ public class CuidadoresController : ControllerBase
         return texto;
     }
 
+    private static string NormalizeTurno(string turno)
+    {
+        if (string.IsNullOrWhiteSpace(turno))
+            return string.Empty;
+
+        return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(turno.Trim().ToLower());
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -52,6 +60,7 @@ public class CuidadoresController : ControllerBase
     public async Task<IActionResult> Create(Cuidador cuidador)
     {
         cuidador.Nombre = Normalize(cuidador.Nombre);
+        cuidador.Turno = NormalizeTurno(cuidador.Turno);
 
         if (string.IsNullOrWhiteSpace(cuidador.Nombre))
             return BadRequest("El nombre del cuidador es obligatorio.");
@@ -60,11 +69,12 @@ public class CuidadoresController : ControllerBase
             return BadRequest("El nombre no puede exceder 100 caracteres.");
 
         var turnosValidos = new[] { "Mañana", "Tarde", "Noche" };
-        if (!turnosValidos.Contains(cuidador.Turno))
+        if (!turnosValidos.Contains(cuidador.Turno, StringComparer.CurrentCultureIgnoreCase))
             return BadRequest("El turno debe ser 'Mañana', 'Tarde' o 'Noche'.");
 
         var duplicado = await _db.Cuidadores.AnyAsync(c =>
-            c.Nombre == cuidador.Nombre && c.Turno == cuidador.Turno);
+            c.Nombre.ToLower() == cuidador.Nombre.ToLower() &&
+            c.Turno.ToLower() == cuidador.Turno.ToLower());
         if (duplicado)
             return Conflict("Ya existe un cuidador con ese nombre en ese turno.");
 
@@ -84,6 +94,7 @@ public class CuidadoresController : ControllerBase
             return NotFound();
 
         cuidadorActualizado.Nombre = Normalize(cuidadorActualizado.Nombre);
+        cuidadorActualizado.Turno = NormalizeTurno(cuidadorActualizado.Turno);
 
         if (string.IsNullOrWhiteSpace(cuidadorActualizado.Nombre))
             return BadRequest("El nombre del cuidador es obligatorio.");
@@ -92,12 +103,12 @@ public class CuidadoresController : ControllerBase
             return BadRequest("El nombre no puede exceder 100 caracteres.");
 
         var turnosValidos = new[] { "Mañana", "Tarde", "Noche" };
-        if (!turnosValidos.Contains(cuidadorActualizado.Turno))
+        if (!turnosValidos.Contains(cuidadorActualizado.Turno, StringComparer.CurrentCultureIgnoreCase))
             return BadRequest("El turno debe ser 'Mañana', 'Tarde' o 'Noche'.");
 
         var duplicado = await _db.Cuidadores.AnyAsync(c =>
-            c.Nombre == cuidadorActualizado.Nombre &&
-            c.Turno == cuidadorActualizado.Turno &&
+            c.Nombre.ToLower() == cuidadorActualizado.Nombre.ToLower() &&
+            c.Turno.ToLower() == cuidadorActualizado.Turno.ToLower() &&
             c.Id != id);
         if (duplicado)
             return Conflict("Ya existe un cuidador con ese nombre en ese turno.");
