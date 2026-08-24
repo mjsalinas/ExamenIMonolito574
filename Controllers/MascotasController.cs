@@ -10,8 +10,11 @@ namespace RefugioMascotas.Controllers;
 [Route("api/[controller]")]
 public class MascotasController : ControllerBase
 {
-    private const int LongitudMinima = 2;
-    private const int LongitudMaxima = 50;
+    private const int NombreMinLength = 2;
+    private const int NombreMaxLength = 60;
+
+    private const int EspecieMinLength = 2;
+    private const int EspecieMaxLength = 40;
 
     private readonly RefugioDbContext _db;
 
@@ -53,21 +56,27 @@ public class MascotasController : ControllerBase
         if (string.IsNullOrWhiteSpace(mascota.Nombre))
             return BadRequest("El nombre de la mascota es obligatorio.");
 
-        if (mascota.Nombre.Length < LongitudMinima ||
-            mascota.Nombre.Length > LongitudMaxima)
+        if (mascota.Nombre.Length < NombreMinLength ||
+            mascota.Nombre.Length > NombreMaxLength)
         {
             return BadRequest(
-                $"El nombre debe tener entre {LongitudMinima} y {LongitudMaxima} caracteres.");
+                $"El nombre debe tener entre {NombreMinLength} y {NombreMaxLength} caracteres.");
+        }
+
+        if (!Regex.IsMatch(mascota.Nombre, @"^[\p{L}\s-]+$"))
+        {
+            return BadRequest(
+                "El nombre de la mascota solo puede contener letras, espacios y guiones.");
         }
 
         if (string.IsNullOrWhiteSpace(mascota.Especie))
             return BadRequest("La especie es obligatoria.");
 
-        if (mascota.Especie.Length < LongitudMinima ||
-            mascota.Especie.Length > LongitudMaxima)
+        if (mascota.Especie.Length < EspecieMinLength ||
+            mascota.Especie.Length > EspecieMaxLength)
         {
             return BadRequest(
-                $"La especie debe tener entre {LongitudMinima} y {LongitudMaxima} caracteres.");
+                $"La especie debe tener entre {EspecieMinLength} y {EspecieMaxLength} caracteres.");
         }
 
         if (mascota.Edad < 0 || mascota.Edad > 30)
@@ -88,14 +97,19 @@ public class MascotasController : ControllerBase
             mascota);
     }
 
-    private static string NormalizarTexto(string texto)
+    private static string NormalizarTexto(string? texto)
     {
         if (string.IsNullOrWhiteSpace(texto))
             return string.Empty;
 
-        texto = Regex.Replace(texto.Trim(), @"\s+", " ");
+        var colapsado = Regex.Replace(
+        texto.Trim(),
+        @"\s+",
+        " ");
 
-        return CultureInfo.CurrentCulture.TextInfo
-            .ToTitleCase(texto.ToLower());
+        var cultura = CultureInfo.GetCultureInfo("es-HN");
+
+        return cultura.TextInfo.ToTitleCase(
+            colapsado.ToLower(cultura));
     }
 }
