@@ -72,6 +72,26 @@ public async Task<IActionResult> Delete(int id)
     return NoContent();
 }
 
+[HttpGet("{id}/mascotas")]
+public async Task<IActionResult> GetMascotasPorCuidador(int id)
+{
+    if (id <= 0)
+        return BadRequest("El id debe ser mayor que cero.");
+
+    var cuidadorExiste = await _db.Cuidadores
+        .AnyAsync(c => c.Id == id);
+
+    if (!cuidadorExiste)
+        return NotFound();
+
+    var mascotas = await _db.Mascotas
+        .Where(m => m.CuidadorId == id)
+        .OrderBy(m => m.Nombre)
+        .ToListAsync();
+
+    return Ok(mascotas);
+}
+
     [HttpPost]
     public async Task<IActionResult> Create(Cuidador cuidador)
     {
