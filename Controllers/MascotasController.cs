@@ -47,6 +47,29 @@ public class MascotasController : ControllerBase
         return Ok(mascota);
     }
 
+    [HttpDelete("{id}")]
+public async Task<IActionResult> Delete(int id)
+{
+    if (id <= 0)
+        return BadRequest("El id debe ser mayor que cero.");
+
+    var mascota = await _db.Mascotas.FindAsync(id);
+
+    if (mascota is null)
+        return NotFound();
+
+    if (mascota.EnTratamiento)
+    {
+        return Conflict(
+            "No se puede eliminar la mascota porque actualmente está en tratamiento.");
+    }
+
+    _db.Mascotas.Remove(mascota);
+    await _db.SaveChangesAsync();
+
+    return NoContent();
+}
+
     [HttpPost]
     public async Task<IActionResult> Create(Mascota mascota)
     {

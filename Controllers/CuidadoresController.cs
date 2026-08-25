@@ -46,6 +46,32 @@ public class CuidadoresController : ControllerBase
         return Ok(cuidador);
     }
 
+    [HttpDelete("{id}")]
+public async Task<IActionResult> Delete(int id)
+{
+    if (id <= 0)
+        return BadRequest("El id debe ser mayor que cero.");
+
+    var cuidador = await _db.Cuidadores.FindAsync(id);
+
+    if (cuidador is null)
+        return NotFound();
+
+    var tieneMascotas = await _db.Mascotas
+        .AnyAsync(m => m.CuidadorId == id);
+
+    if (tieneMascotas)
+    {
+        return Conflict(
+            "No se puede eliminar el cuidador porque tiene mascotas asignadas.");
+    }
+
+    _db.Cuidadores.Remove(cuidador);
+    await _db.SaveChangesAsync();
+
+    return NoContent();
+}
+
     [HttpPost]
     public async Task<IActionResult> Create(Cuidador cuidador)
     {
