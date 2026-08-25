@@ -107,6 +107,90 @@ public class MascotasController : ControllerBase
             mascota);
     }
 
+    [HttpPut("{id}")]
+public async Task<IActionResult> Update(
+    int id,
+    Mascota mascotaActualizada)
+{
+    if (id <= 0)
+        return BadRequest("El id debe ser mayor que cero.");
+
+    var mascota = await _db.Mascotas.FindAsync(id);
+
+    if (mascota is null)
+        return NotFound();
+
+    mascotaActualizada.Nombre =
+        NormalizarTexto(mascotaActualizada.Nombre);
+
+    mascotaActualizada.Especie =
+        NormalizarTexto(mascotaActualizada.Especie);
+
+    if (string.IsNullOrWhiteSpace(mascotaActualizada.Nombre))
+        return BadRequest("El nombre de la mascota es obligatorio.");
+
+    if (mascotaActualizada.Nombre.Length < NombreMinLength ||
+        mascotaActualizada.Nombre.Length > NombreMaxLength)
+    {
+        return BadRequest(
+            $"El nombre debe tener entre {NombreMinLength} y {NombreMaxLength} caracteres.");
+    }
+
+    if (!Regex.IsMatch(
+        mascotaActualizada.Nombre,
+        @"^[\p{L}\s-]+$"))
+    {
+        return BadRequest(
+            "El nombre de la mascota solo puede contener letras, espacios y guiones.");
+    }
+
+    if (string.IsNullOrWhiteSpace(mascotaActualizada.Especie))
+        return BadRequest("La especie es obligatoria.");
+
+    if (mascotaActualizada.Especie.Length < EspecieMinLength ||
+        mascotaActualizada.Especie.Length > EspecieMaxLength)
+    {
+        return BadRequest(
+            $"La especie debe tener entre {EspecieMinLength} y {EspecieMaxLength} caracteres.");
+    }
+
+    if (mascotaActualizada.Edad < 0 ||
+        mascotaActualizada.Edad > 30)
+    {
+        return BadRequest(
+            "La edad debe estar entre 0 y 30 años.");
+    }
+
+    var cuidadorExiste = await _db.Cuidadores
+        .AnyAsync(c => c.Id == mascotaActualizada.CuidadorId);
+
+    if (!cuidadorExiste)
+        return BadRequest(
+            "El cuidador especificado no existe.");
+
+    var duplicado = await _db.Mascotas
+        .AnyAsync(m =>
+            m.Id != id &&
+            m.Nombre == mascotaActualizada.Nombre &&
+            m.CuidadorId == mascotaActualizada.CuidadorId);
+
+    if (duplicado)
+    {
+        return Conflict(
+            "Ya existe otra mascota con el mismo nombre y cuidador.");
+    }
+
+    mascota.Nombre = mascotaActualizada.Nombre;
+    mascota.Especie = mascotaActualizada.Especie;
+    mascota.Edad = mascotaActualizada.Edad;
+    mascota.EnTratamiento = mascotaActualizada.EnTratamiento;
+    mascota.CuidadorId = mascotaActualizada.CuidadorId;
+
+    await _db.SaveChangesAsync();
+
+    return Ok(mascota);
+}
+
     private static string NormalizarTexto(string? texto)
     {
         if (string.IsNullOrWhiteSpace(texto))

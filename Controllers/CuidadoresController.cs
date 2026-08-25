@@ -92,6 +92,69 @@ public class CuidadoresController : ControllerBase
             new { id = cuidador.Id }, 
             cuidador);
     }
+[HttpPut("{id}")]
+public async Task<IActionResult> Update(
+    int id,
+    Cuidador cuidadorActualizado)
+{
+    if (id <= 0)
+        return BadRequest("El id debe ser mayor que cero.");
+
+    var cuidador = await _db.Cuidadores.FindAsync(id);
+
+    if (cuidador is null)
+        return NotFound();
+
+    cuidadorActualizado.Nombre =
+        NormalizarTexto(cuidadorActualizado.Nombre);
+
+    cuidadorActualizado.Turno =
+        NormalizarTexto(cuidadorActualizado.Turno);
+
+    if (string.IsNullOrWhiteSpace(cuidadorActualizado.Nombre))
+        return BadRequest(
+            "El nombre del cuidador es obligatorio.");
+
+    if (cuidadorActualizado.Nombre.Length < NombreMinLength ||
+        cuidadorActualizado.Nombre.Length > NombreMaxLength)
+    {
+        return BadRequest(
+            $"El nombre del cuidador debe tener entre {NombreMinLength} y {NombreMaxLength} caracteres.");
+    }
+
+    if (!Regex.IsMatch(
+        cuidadorActualizado.Nombre,
+        @"^[\p{L}\s-]+$"))
+    {
+        return BadRequest(
+            "El nombre del cuidador solo puede contener letras, espacios y guiones.");
+    }
+
+    if (!TurnosValidos.Contains(cuidadorActualizado.Turno))
+    {
+        return BadRequest(
+            $"El turno del cuidador debe ser uno de los siguientes: {string.Join(", ", TurnosValidos)}.");
+    }
+
+    var duplicado = await _db.Cuidadores
+        .AnyAsync(c =>
+            c.Id != id &&
+            c.Nombre == cuidadorActualizado.Nombre &&
+            c.Turno == cuidadorActualizado.Turno);
+
+    if (duplicado)
+    {
+        return Conflict(
+            "Ya existe otro cuidador con el mismo nombre y turno.");
+    }
+
+    cuidador.Nombre = cuidadorActualizado.Nombre;
+    cuidador.Turno = cuidadorActualizado.Turno;
+
+    await _db.SaveChangesAsync();
+
+    return Ok(cuidador);
+}
 
     private static string NormalizarTexto(string? texto)
     {
