@@ -73,6 +73,16 @@ public class CuidadoresController : ControllerBase
                 $"El turno del cuidador debe ser uno de los siguientes: {string.Join(", ", TurnosValidos)}.");
     }
 
+    var cuidadorDuplicado = await _db.Cuidadores
+        .AnyAsync(c => 
+        c.Nombre == cuidador.Nombre && 
+        c.Turno == cuidador.Turno);
+
+        if (cuidadorDuplicado)
+        {
+            return Conflict(
+                "Ya existe un cuidador con el mismo nombre y turno.");
+    }
 
         _db.Cuidadores.Add(cuidador);
         await _db.SaveChangesAsync();
